@@ -1,28 +1,12 @@
 version: '3'
 services:
-  puppetserver:
-    build:
-      dockerfile: Dockerfile.source
-      context: puppetserver
-    hostname: puppet.docker
-    ports:
-      - 8140:8140
-    environment:
-      - PUPPETSERVER_HEAP_SIZE=512M
-    volumes:
-      - ./ssl:/etc/puppetlabs/puppet/ssl
-      - ./puppet.conf:/etc/puppetlabs/puppet/puppet.conf
-      - ./puppet:/puppet
-      - ./hiera:/hiera
-      - ./facter:/facter
-      - ./code:/etc/puppetlabs/code
   vault:
     build: docker/vault
     hostname: vault.docker
     volumes:
-      - ./ssl/certs/ca.pem:/vault/config/ca.pem
-      - ./ssl/certs/vault.docker.pem:/vault/config/cert.pem
-      - ./ssl/private_keys/vault.docker.pem:/vault/config/private_key.pem
+      - /etc/puppetlabs/puppet/ssl/certs/ca.pem:/vault/config/ca.pem
+      - /etc/puppetlabs/puppet/ssl/certs/vault.docker.pem:/vault/config/cert.pem
+      - /etc/puppetlabs/puppet/ssl/private_keys/vault.docker.pem:/vault/config/private_key.pem
     ports:
       - 8200:8200
       - 8201:8201
@@ -49,14 +33,6 @@ services:
       VAULT_ADDR: "https://vault.docker:8200"
       VAULT_CACERT: "/vault/config/ca.pem"
       VAULT_CLIENT_KEY: "/vault/config/private_key.pem"
-      VAULT_CLIENT_CERT: "vault/config/cert.pem"
+      VAULT_CLIENT_CERT: "/vault/config/cert.pem"
     command: ["server"]
-  agent:
-    build: docker/puppet
-    hostname: agent.docker
-    command: ["tail", "-f", "/dev/null"]
-    links:
-      - puppetserver:puppet
-      - vault:vault.docker
-    volumes:
-      - ./ssl:/etc/puppetlabs/puppet/ssl
+
