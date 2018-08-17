@@ -14,7 +14,18 @@ The demo assumes:
 * `/opt/puppetlabs/puppet/bin/gem install vault` on every node you want to access Vault from
 * Add `vault.docker` to `/etc/hosts` on every node you want to access Vault from to point to localhost
 
-To start the services, run `./demo-up.sh` from the root of this repo. This will
-bring up the Vault service and unseal vault
+To run through the demo:
+* `docker-compose up` to bring up Vault
+* `docker-compose exec vault /unseal.sh` to unseal Vault
+* Classify your node with Puppet code that calls vault_lookup and run Puppet on it, e.g. `/etc/puppetlabs/code/environments/production/manifests/site.pp` containing
+```
+$d = Deferred('vault_lookup',["secret/test"])
+
+node default {
+  notify { example :
+    message => $d
+  }
+}
+```
 
 Key pieces of the proof of concept are the [Puppet function that calls Vault](https://github.com/puppetlabs/puppet/blob/6e4452cd75f76249bbaa7ad546924833fc1a2b4c/lib/puppet/functions/vault_lookup.rb) and the [Puppet code that fetches a secret from Vault](https://github.com/puppetlabs/puppet-vault-demo/blob/master/code/environments/production/manifests/init.pp)
